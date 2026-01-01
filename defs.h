@@ -120,6 +120,7 @@ void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
 void            yield(void);
+int		dump_physmem_info(void *addr, int max_entries);
 
 // swtch.S
 void            swtch(struct context**, struct context*);

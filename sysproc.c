@@ -89,3 +89,17 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+int
+sys_dump_physmem_info(void)
+{
+	void *addr;
+	int max_entries;
+
+	//유저 인자 추출
+	argptr(0, (void*)&addr, sizeof(void*));
+	argint(1, &max_entries);
+	
+	//커널 함수 호출
+	return dump_physmem_info(addr, max_entries);
+}

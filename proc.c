@@ -6,6 +6,7 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#include "physmeminfo.h"
 
 struct {
   struct spinlock lock;
@@ -17,6 +18,19 @@ static struct proc *initproc;
 int nextpid = 1;
 extern void forkret(void);
 extern void trapret(void);
+
+//main.c에 정의된 플래그
+extern int is_user_process_started;
+//kalloc.c
+extern struct physframe_info pf_info[];
+//kmem lock 전역변수로 획득하여 공유
+extern struct {
+	struct spinlock lock;
+	int use_lock;
+	struct run *freelist;
+} kmem;
+//임시 복사용
+struct physframe_info tmp_pf_info[PFNNUM];
 
 static void wakeup1(void *chan);
 
@@ -151,6 +165,7 @@ userinit(void)
   p->state = RUNNABLE;
 
   release(&ptable.lock);
+  is_user_process_started = 1;	//유저 프로세스 시작 완료
 }
 
 // Grow current process's memory by n bytes.
@@ -531,4 +546,33 @@ procdump(void)
     }
     cprintf("\n");
   }
+}
+
+//커널 영역의 전역 프레임 정보를 사용자 공간으로 copyout()으로 복사
+int
+dump_physmem_info(void *addr, int max_entries) {
+	int count = 0;
+
+	//max보다 높은 숫자 들어올 경우 방어코드
+	if(max_entries > PFNNUM)
+		max_entries = PFNNUM;
+
+	acquire(&kmem.lock);
+	//락 획득 후 
+	memmove(tmp_pf_info, pf_info, sizeof(struct physframe_info) * max_entries);
+	release(&kmem.lock);
+
+
+	for(int i = 0 ; i < max_entries ; i++) {
+		//pf_info[i]의 내용을 유저 공간으로 복사
+		if(copyout(myproc()->pgdir
+			, (uint)addr + sizeof(struct physframe_info) * i
+			, (char*)&tmp_pf_info[i]
+			, sizeof(struct physframe_info)) < 0) {
+		       return -1;
+		}
+		count++;
+	}	
+	//복사된 엔트리 개수 리턴
+	return count;
 }

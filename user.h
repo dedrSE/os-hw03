@@ -1,3 +1,5 @@
+#include "physmeminfo.h"
+
 struct stat;
 struct rtcdate;
 
@@ -23,6 +25,8 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
+//프레임 사용 현황 시스템콜
+int dump_physmem_info(void *addr, int max_entries);
 
 // ulib.c
 int stat(const char*, struct stat*);

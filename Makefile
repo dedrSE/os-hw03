@@ -71,7 +71,7 @@ QEMU = $(shell if which qemu > /dev/null; \
 	echo "***" 1>&2; exit 1)
 endif
 
-CC = $(TOOLPREFIX)gcc
+CC = $(TOOLPREFIX)gcc-9
 AS = $(TOOLPREFIX)gas
 LD = $(TOOLPREFIX)ld
 OBJCOPY = $(TOOLPREFIX)objcopy
@@ -181,6 +181,9 @@ UPROGS=\
 	_usertests\
 	_wc\
 	_zombie\
+	_memdump\
+	_memstress\
+	_memtest\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
